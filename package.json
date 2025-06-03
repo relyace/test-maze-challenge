@@ -1,0 +1,12 @@
+{
+  "name": "maze-challenge",
+  "version": "1.0.0",
+  "description": "an application to resolve maze challenge",
+  "main": "index.ts",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "elyace",
+  "license": "ISC",
+  "type": "module"
+}
