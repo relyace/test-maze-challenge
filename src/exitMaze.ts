@@ -10,7 +10,8 @@ import { MazeServices } from "./services/mazeServices";
 export async function tryExitMaze(
   player: Player,
   discoverUrl: string,
-  moveUrl: string
+  moveUrl: string,
+  magicJump = false
 ) {
   // we need to keep track of the visited cases
   // to avoid infinite loops
@@ -42,31 +43,28 @@ export async function tryExitMaze(
     }
 
     for (var caseToVisit of visitables) {
-      if (!caseToVisit.isNeighbors(player.coordinate)) continue; // skip cases that are too far away
-
       discovered.push(caseToVisit.coordinate);
 
+      // sometimes discovered cases are too far away, suppose we can do a magic jump
+      if (!caseToVisit.isNeighbors(player.coordinate) && !magicJump) continue; // skip cases that are too far away
+
+      console.log(
+        "Moving player to from",
+        player.coordinate,
+        "to",
+        caseToVisit.coordinate
+      );
       try {
-        console.log(
-          "Moving player to from",
-          player.coordinate,
-          "to",
-          caseToVisit.coordinate
-        );
-        player.move(caseToVisit.coordinate);
         // we need to save new player coordinates
         const newParams = await MazeServices.movePlayer(
           moveUrl,
-          player.coordinate
+          caseToVisit.coordinate
         );
-        // move the player to the new case
-        console.log("New player state after move:", newParams);
+        player.move(caseToVisit.coordinate);
         // moving player will update the player state
-        player.updateState(newParams.player);
+        player.updateState(newParams);
       } catch {
-        // ok move was forbidden, we will try next case
-        player.moveBack(); // move back to the previous case
-        continue;
+        // sometimes the move fails 
       }
 
       if (caseToVisit.isExit()) {
@@ -75,7 +73,9 @@ export async function tryExitMaze(
         return true;
       }
 
-      if (await findPath(player)) {
+      const pathFound = await findPath(player);
+
+      if (pathFound) {
         console.log("Path found to exit:", player.coordinate);
         return true; // found a path to exit
       }
@@ -83,34 +83,12 @@ export async function tryExitMaze(
 
     console.log("No path found from:", player.coordinate);
 
-    try {
-      player.moveBack(); // move back to the previous case
-      console.log("Move back player to", player.coordinate);
-      const newParams = await MazeServices.movePlayer(
-        moveUrl,
-        player.coordinate
-      );
-      // backtrack if no path was found..
-      console.log("New player state after move back:", newParams);
-      player.updateState(newParams.player);
-    } catch {
-      // move was forbidden, we will try from next call
-      player.moveBack(); // move back to the previous case
-      return false;
-    }
+    player.moveBack(); // move back to the previous case if no path was found
 
     return false; // no path found
   }
 
   await findPath(player);
-
-  for (const coordinate of discovered) {
-    if (!visitedCases.hasVisited(coordinate)) {
-      throw new Error(
-        `Coordinate ${coordinate} was not visited, something went wrong!`
-      );
-    }
-  }
 
   return player.getWalkHistory();
 }

@@ -23,13 +23,13 @@ export class Player {
 
   public move(newCoordinate: Coordinate): Player {
     // check if not jumping to a coordinate that is not adjacent
-    const dx = Math.abs(newCoordinate.x - this.coordinate.x);
-    const dy = Math.abs(newCoordinate.y - this.coordinate.y);
-    if (dx > 1 || dy > 1) {
-      throw new Error(
-        `Invalid move from (${this.coordinate.x}, ${this.coordinate.y}) to (${newCoordinate.x}, ${newCoordinate.y}). Coordinates must be adjacent.`
-      );
-    }
+    // const dx = Math.abs(newCoordinate.x - this.coordinate.x);
+    // const dy = Math.abs(newCoordinate.y - this.coordinate.y);
+    // if (dx > 1 || dy > 1) {
+    //   throw new Error(
+    //     `Invalid move from (${this.coordinate.x}, ${this.coordinate.y}) to (${newCoordinate.x}, ${newCoordinate.y}). Coordinates must be adjacent.`
+    //   );
+    // }
 
     this.coordinate = newCoordinate;
     this.history.push(newCoordinate); // Add new coordinate to history

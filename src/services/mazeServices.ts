@@ -7,8 +7,8 @@ import {
 } from "../mapping/mappings";
 
 export class MazeServices {
-  private static readonly baseUrl: string = "https://hire-game-maze.pertimm.dev"; // Replace with your actual base URL
-
+  private static readonly baseUrl: string =
+    "https://hire-game-maze.pertimm.dev";
   public static async startGame(playerName: string): Promise<{
     player: Player;
     url_discover: string;
@@ -59,18 +59,13 @@ export class MazeServices {
 
     const resources = await res.json();
 
-
     return mapDiscoverResourceToDiscover(resources);
   }
 
   public static async movePlayer(
     moveUrl: string,
     location: Coordinate
-  ): Promise<{
-    player: Player;
-    url_discover: string;
-    url_move: string;
-  }> {
+  ): Promise<Player> {
     // ensure moveUrl is a relative URL
     const pat = /^https?:\/\//i;
     const isAbsoluteUrl = pat.test(moveUrl);
@@ -88,22 +83,21 @@ export class MazeServices {
 
     if (!res.ok) {
       const error = await res.json();
-      throw new Error(`Failed to move player: ${ JSON.stringify(error) }`);
+      throw new Error(`Failed to move player: ${JSON.stringify(error)}`);
     }
 
     const resource = await res.json();
 
-    if( resource.position_x !== location.x && resource.position_y !== location.y ) {
-      console.error(`Move error: ${res.statusText} - ${resource.message}`);
+    if (
+      resource.position_x !== location.x &&
+      resource.position_y !== location.y
+    ) {
+      console.error(`Move error: ${res.statusText} - ${resource.message} - ${resource.dead}`);
       throw new Error(
         `Player moved to unexpected position: expected (${location.x}, ${location.y}), got (${resource.position_x}, ${resource.position_y})`
       );
     }
 
-    return {
-      player: mapPlayerResourceToPlayer(resource),
-      url_discover: resource.url_discover,
-      url_move: resource.url_move,
-    }
+    return mapPlayerResourceToPlayer(resource);
   }
 }
