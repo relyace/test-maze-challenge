@@ -93,6 +93,14 @@ export class MazeServices {
     }
 
     const resource = await res.json();
+    console.log("Resource after move:", resource);
+    console.log("Expected location:", location);
+
+    if( resource.position_x !== location.x && resource.position_y !== location.y ) {
+      throw new Error(
+        `Player moved to unexpected position: expected (${location.x}, ${location.y}), got (${resource.position_x}, ${resource.position_y})`
+      );
+    }
 
     return {
       player: mapPlayerResourceToPlayer(resource),

@@ -1,5 +1,6 @@
 import { Case } from "./data/models/Case";
 import { Player } from "./data/models/Player";
+import { Coordinate } from "./data/models/Reference";
 import { VisitedCases } from "./data/VisitedCases";
 import { MazeServices } from "./services/mazeServices";
 
@@ -9,6 +10,7 @@ export async function tryExitMaze(player: Player, initDiscoverUrl: string, initM
     // we need to keep track of the visited cases
     // to avoid infinite loops
     const visitedCases: VisitedCases = new VisitedCases();
+    const discovered: Coordinate[] = [];
     let discoverUrl = initDiscoverUrl;
     let moveUrl = initMoveUrl;
 
@@ -38,11 +40,16 @@ export async function tryExitMaze(player: Player, initDiscoverUrl: string, initM
         }
 
         for(var caseToVisit of visitables) {
+
+            if(!caseToVisit.isNeighbors(player.coordinate)) continue; // skip cases that are too far away
+
+            discovered.push(caseToVisit.coordinate);
             // move the player to the new case
             player.move(caseToVisit.coordinate);
-            console.log("Moving player to:", caseToVisit.coordinate);
+            console.log("Moving player to:", player.coordinate);
             // we need to save new player coordinates
             const newParams = await MazeServices.movePlayer(moveUrl, player.coordinate)
+            console.log("New player state after move:", newParams);
             // moving player will update the player state
             player.updateState(newParams.player);
 
@@ -67,6 +74,7 @@ export async function tryExitMaze(player: Player, initDiscoverUrl: string, initM
         player.moveBack(); // move back to the previous case
         console.log("Move back player to", player.coordinate);
         const newParams = await MazeServices.movePlayer(moveUrl, player.coordinate)
+        console.log("New player state after move back:", newParams);
         discoverUrl = newParams.url_discover;
         moveUrl = newParams.url_move;
         player.updateState(newParams.player);
@@ -75,6 +83,12 @@ export async function tryExitMaze(player: Player, initDiscoverUrl: string, initM
     }
 
     await findPath(player);
+
+    for(const coordinate of discovered) {
+        if(!visitedCases.hasVisited(coordinate)){
+            throw new Error(`Coordinate ${coordinate} was not visited, something went wrong!`);
+        }
+    }
 
     return player.getWalkHistory();
 }

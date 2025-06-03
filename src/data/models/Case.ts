@@ -1,5 +1,5 @@
 import { Player } from "./Player";
-import { Coordinate, Directions } from "./Reference";
+import { Coordinate } from "./Reference";
 
 export enum CaseNature {
     Wall = 'wall',
@@ -29,25 +29,6 @@ export class Case {
         return this.moveInto && (this.nature === CaseNature.Path || this.nature === CaseNature.Arrival);
     }
 
-    public toDirection(current: Coordinate): Directions|null {
-
-        if (this.coordinate.x === current.x && this.coordinate.y === current.y - 1) {
-            return Directions.Up;
-        }
-        if (this.coordinate.x === current.x && this.coordinate.y === current.y + 1) {
-            return Directions.Down;
-        }
-        if (this.coordinate.x === current.x - 1 && this.coordinate.y === current.y) {
-            return Directions.Left;
-        }
-        if (this.coordinate.x === current.x + 1 && this.coordinate.y === current.y) {
-            return Directions.Right;
-        }
-
-        // if we are not in a direction, we cannot move into it, since we can move by one step only
-        return null;
-    }
-
     public static fromPlayer(player: Player) : Case {
         return new Case(
             player.coordinate,
@@ -58,5 +39,12 @@ export class Case {
 
     public isExit() {
         return this.nature === CaseNature.Arrival;
+    }
+
+    public isNeighbors(coordinate: Coordinate): boolean {
+        const dx = Math.abs(coordinate.x - this.coordinate.x);
+        const dy = Math.abs(coordinate.y - this.coordinate.y);
+
+        return dx <= 1 && dy <= 1 && !coordinate.equals(this.coordinate); // must be adjacent, but not the same coordinate
     }
 }

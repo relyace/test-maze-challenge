@@ -1,4 +1,4 @@
-import { Coordinate, Directions } from "./Reference";
+import { Coordinate } from "./Reference";
 
 export class Player {
   public readonly name: string;
@@ -22,6 +22,15 @@ export class Player {
   private history: Array<Coordinate> = [];
 
   public move(newCoordinate: Coordinate): Player {
+    // check if not jumping to a coordinate that is not adjacent
+    const dx = Math.abs(newCoordinate.x - this.coordinate.x);
+    const dy = Math.abs(newCoordinate.y - this.coordinate.y);
+    if (dx > 1 || dy > 1) {
+      throw new Error(
+        `Invalid move from (${this.coordinate.x}, ${this.coordinate.y}) to (${newCoordinate.x}, ${newCoordinate.y}). Coordinates must be adjacent.`
+      );
+    }
+
     this.coordinate = newCoordinate;
     this.history.push(newCoordinate); // Add new coordinate to history
 
@@ -54,7 +63,6 @@ export class Player {
   }
 
   public updateState(player: Player): Player {
-  
     this.dead = player.dead;
     this.wins = player.wins;
 
