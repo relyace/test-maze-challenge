@@ -21,37 +21,7 @@ export class Player {
 
   private history: Array<Coordinate> = [];
 
-  public move(step: Directions): Player {
-    let newCoordinate: Coordinate;
-    switch (step) {
-      case Directions.Up:
-        newCoordinate = new Coordinate(
-          this.coordinate.x,
-          this.coordinate.y - 1
-        );
-        break;
-      case Directions.Down:
-        newCoordinate = new Coordinate(
-          this.coordinate.x,
-          this.coordinate.y + 1
-        );
-        break;
-      case Directions.Left:
-        newCoordinate = new Coordinate(
-          this.coordinate.x - 1,
-          this.coordinate.y
-        );
-        break;
-      case Directions.Right:
-        newCoordinate = new Coordinate(
-          this.coordinate.x + 1,
-          this.coordinate.y
-        );
-        break;
-      default:
-        throw new Error(`Unknown step move: ${step}`);
-    }
-
+  public move(newCoordinate: Coordinate): Player {
     this.coordinate = newCoordinate;
     this.history.push(newCoordinate); // Add new coordinate to history
 

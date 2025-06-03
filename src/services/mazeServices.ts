@@ -8,19 +8,18 @@ import {
 } from "../mapping/mappings";
 
 export class MazeServices {
-  private static readonly baseUrl: string = "https://example.com/api"; // Replace with your actual base URL
+  private static readonly baseUrl: string = "https://hire-game-maze.pertimm.dev"; // Replace with your actual base URL
 
   public static async startGame(playerName: string): Promise<{
     player: Player;
     url_discover: string;
     url_move: string;
   }> {
-    const res = await fetch(`${MazeServices.baseUrl}/start-game`, {
+    const formData = new FormData();
+    formData.append("player", playerName);
+    const res = await fetch(`${MazeServices.baseUrl}/start-game/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ player: playerName }),
+      body: formData,
     });
 
     if (!res.ok) {
@@ -61,6 +60,7 @@ export class MazeServices {
 
     const resources = await res.json();
 
+
     return mapDiscoverResourceToDiscover(resources);
   }
 
@@ -76,29 +76,26 @@ export class MazeServices {
     const pat = /^https?:\/\//i;
     const isAbsoluteUrl = pat.test(moveUrl);
 
-    const body = {
-      position_x: location.x,
-      position_y: location.y,
-    };
+    const formData = new FormData();
+    formData.append("position_x", location.x.toString());
+    formData.append("position_y", location.y.toString());
     const res = await fetch(
       isAbsoluteUrl ? moveUrl : `${MazeServices.baseUrl}${moveUrl}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
+        body: formData,
       }
     );
 
     if (!res.ok) {
-      throw new Error(`Failed to move player: ${res.statusText}`);
+      const error = await res.json();
+      throw new Error(`Failed to move player: ${ JSON.stringify(error) }`);
     }
 
     const resource = await res.json();
 
     return {
-      player: mapPlayerResourceToPlayer(resource.player),
+      player: mapPlayerResourceToPlayer(resource),
       url_discover: resource.url_discover,
       url_move: resource.url_move,
     }

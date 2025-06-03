@@ -3,8 +3,15 @@
   "version": "1.0.0",
   "description": "an application to resolve maze challenge",
   "main": "index.ts",
+    "bin": {
+    "start": "index.ts"
+  },
   "scripts": {
-    "test": "test"
+    "test": "test",
+    "start": "tsx index.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4"
   },
   "author": "elyace",
   "license": "ISC",

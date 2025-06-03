@@ -6,7 +6,7 @@ export enum CaseNature {
     Path = 'path',
     Trap = 'trap',
     Home = 'home',
-    Arrival = 'Arrival',
+    Arrival = 'arrival',
 }
 
 // Case is immutable, we can not move or change it's nature

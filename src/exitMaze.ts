@@ -12,9 +12,12 @@ export async function tryExitMaze(player: Player, initDiscoverUrl: string, initM
     let discoverUrl = initDiscoverUrl;
     let moveUrl = initMoveUrl;
 
-    async function findPath(player: Player)
+    async function findPath(player: Player): Promise<boolean>
     {
-        if(player.wins) return true;
+        if(player.wins){
+            console.log("Player already won the game, exiting...");
+            return true; // player already won
+        }
         
         if(player.dead) throw new Error("Game over: Player is dead :(");
         
@@ -23,36 +26,46 @@ export async function tryExitMaze(player: Player, initDiscoverUrl: string, initM
         visitedCases.add( Case.fromPlayer(player) );
 
         const discovery = await MazeServices.surroundsDiscover(discoverUrl)
+        
         // this will promote exit if it exists
         const visitables = discovery.getVisitableCases();
+        console.log("Discovered cases:", visitables);
 
         if( visitables.length === 0 ) {
-
+            console.log("No visitable cases found from:", player.coordinate);
             // no more cases to visit, we are stuck
             return false;
         }
 
-        for(const caseToVisit of visitables) {
-            const newDirection = caseToVisit.toDirection(player.coordinate);
+        for(var caseToVisit of visitables) {
             // move the player to the new case
-            player.move(newDirection!);
+            player.move(caseToVisit.coordinate);
+            console.log("Moving player to:", caseToVisit.coordinate);
             // we need to save new player coordinates
             const newParams = await MazeServices.movePlayer(moveUrl, player.coordinate)
             // moving player will update the player state
             player.updateState(newParams.player);
 
-            if(caseToVisit.isExit()) return true;
+            if(caseToVisit.isExit()){
+                console.log("Exit found at:", player.coordinate);
+                console.log("Player state:", player);
+                return true
+            };
             
             discoverUrl = newParams.url_discover;
             moveUrl = newParams.url_move;
 
             if( await findPath(player) ) {
+                console.log("Path found to exit:", player.coordinate);
                 return true; // found a path to exit
             }
         }
 
+        console.log("No path found from:", player.coordinate);
+        
         // backtrack if no path was found..
         player.moveBack(); // move back to the previous case
+        console.log("Move back player to", player.coordinate);
         const newParams = await MazeServices.movePlayer(moveUrl, player.coordinate)
         discoverUrl = newParams.url_discover;
         moveUrl = newParams.url_move;
