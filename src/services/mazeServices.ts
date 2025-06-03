@@ -1,7 +1,6 @@
 import { Discover } from "../data/models/Discover";
 import { Player } from "../data/models/Player";
 import { Coordinate } from "../data/models/Reference";
-import { CommonResource } from "../data/resources/Resources";
 import {
   mapDiscoverResourceToDiscover,
   mapPlayerResourceToPlayer,
@@ -93,10 +92,9 @@ export class MazeServices {
     }
 
     const resource = await res.json();
-    console.log("Resource after move:", resource);
-    console.log("Expected location:", location);
 
     if( resource.position_x !== location.x && resource.position_y !== location.y ) {
+      console.error(`Move error: ${res.statusText} - ${resource.message}`);
       throw new Error(
         `Player moved to unexpected position: expected (${location.x}, ${location.y}), got (${resource.position_x}, ${resource.position_y})`
       );

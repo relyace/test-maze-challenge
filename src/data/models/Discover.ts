@@ -1,6 +1,4 @@
 import { Case } from "./Case";
-import { Coordinate } from "./Reference";
-
 
 
 export class Discover {
