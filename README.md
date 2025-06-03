@@ -28,11 +28,6 @@ Or, if there is no `start` script, you can run:
 npx ts-node index.ts
 ```
 
-> **Note:** If you don't have `ts-node` installed globally, you can install it with:
-> ```sh
-> npm install -g ts-node typescript
-> ```
-
 ## Project Structure
 
 - `index.ts` - Main entry point
