@@ -1,24 +1,24 @@
 import { Case } from "./data/models/Case";
 import { Player } from "./data/models/Player";
-import { Coordinate } from "./data/models/Reference";
 import { VisitedCases } from "./data/VisitedCases";
 import { MazeServices } from "./services/mazeServices";
 
 // discoverUrl: URL to discover the surroundings of the player
 // moveUrl: URL to move the player to a new case
-// discoverUrl and moveUrl does not change between calls
 export async function tryExitMaze(
   player: Player,
-  discoverUrl: string,
-  moveUrl: string,
-  magicJump = false
+  initialDiscoverUrl: string,
+  initialMoveUrl: string
 ) {
   // we need to keep track of the visited cases
   // to avoid infinite loops
   const visitedCases: VisitedCases = new VisitedCases();
-  const discovered: Coordinate[] = [];
+
+  let discoverUrl = initialDiscoverUrl;
+  let moveUrl = initialMoveUrl;
 
   async function findPath(player: Player): Promise<boolean> {
+    console.log("Finding path from ", player.coordinate);
     if (player.wins) {
       console.log("Player already won the game, exiting...");
       return true; // player already won
@@ -26,69 +26,76 @@ export async function tryExitMaze(
 
     if (player.dead) throw new Error("Game over: Player is dead :(");
 
-    if (visitedCases.hasVisited(player.coordinate)) return false;
+    if (visitedCases.hasVisited(player.coordinate)) {
+      console.log("Already visited case:", player.coordinate);
+      return false;
+    }
 
     visitedCases.add(Case.fromPlayer(player));
 
     const discovery = await MazeServices.surroundsDiscover(discoverUrl);
 
     // this will promote exit if it exists
-    const visitables = discovery.getVisitableCases();
-    console.log("Discovered cases:", visitables);
+    // depends on the actual player position
+    const visitables = discovery.getVisitableCases(player.coordinate);
+    console.log(
+      "Found available cases to visit:",
+      ...visitables.map((c) => c.coordinate)
+    );
 
     if (visitables.length === 0) {
       console.log("No visitable cases found from:", player.coordinate);
-      // no more cases to visit, we are stuck
-      return false;
+      return false; // no visitable cases found
     }
 
     for (var caseToVisit of visitables) {
-      discovered.push(caseToVisit.coordinate);
-
-      // sometimes discovered cases are too far away, suppose we can do a magic jump
-      if (!caseToVisit.isNeighbors(player.coordinate) && !magicJump) continue; // skip cases that are too far away
-
-      console.log(
-        "Moving player to from",
-        player.coordinate,
-        "to",
+      console.log("Moving player to", caseToVisit.coordinate);
+      // we need to save new player coordinates
+      const newParams = await MazeServices.movePlayer(
+        moveUrl,
         caseToVisit.coordinate
       );
-      try {
-        // we need to save new player coordinates
-        const newParams = await MazeServices.movePlayer(
-          moveUrl,
-          caseToVisit.coordinate
-        );
-        player.move(caseToVisit.coordinate);
-        // moving player will update the player state
-        player.updateState(newParams);
-      } catch {
-        // sometimes the move fails 
-      }
+      player.move(newParams.coordinate);
+      player.updateState(newParams);
+      discoverUrl = newParams.discoverUrl;
+      moveUrl = newParams.moveUrl;
+      console.log("Moved player to", player.coordinate);
 
       if (caseToVisit.isExit()) {
         console.log("Exit found at:", player.coordinate);
-        console.log("Player state:", player);
         return true;
       }
 
       const pathFound = await findPath(player);
 
       if (pathFound) {
-        console.log("Path found to exit:", player.coordinate);
         return true; // found a path to exit
+      } else {
+        console.log("No path found from:", player.coordinate);
+        player.moveBack(); // move back to the previous case if no path was found
+        const newParams = await MazeServices.movePlayer(
+          moveUrl,
+          player.coordinate
+        );
+        player.updateState(newParams);
+        discoverUrl = newParams.discoverUrl;
+        moveUrl = newParams.moveUrl;
+        console.log("Moved backward ", player.coordinate);
       }
     }
 
-    console.log("No path found from:", player.coordinate);
-
-    player.moveBack(); // move back to the previous case if no path was found
-
+    visitedCases.removeLastVisited(); // allow re-visit last case in case it will lead to possible exit
+    
     return false; // no path found
   }
 
-  await findPath(player);
+  const resolved = await findPath(player);
 
-  return player.getWalkHistory();
+  if (resolved) {
+    console.log("Maze exited successfully!");
+
+    return player.getWalkHistory();
+  }
+
+  console.error("No path to exit the maze :(");
 }

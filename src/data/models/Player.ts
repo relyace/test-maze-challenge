@@ -1,6 +1,14 @@
 import { Coordinate } from "./Reference";
 
-export class Player {
+
+export interface PlayerFieldInterface {
+  name: string;
+  coordinate: Coordinate;
+  dead: boolean;
+  wins: boolean;
+}
+
+export class Player implements PlayerFieldInterface {
   public readonly name: string;
   public coordinate: Coordinate;
   public dead: boolean;
@@ -23,13 +31,13 @@ export class Player {
 
   public move(newCoordinate: Coordinate): Player {
     // check if not jumping to a coordinate that is not adjacent
-    // const dx = Math.abs(newCoordinate.x - this.coordinate.x);
-    // const dy = Math.abs(newCoordinate.y - this.coordinate.y);
-    // if (dx > 1 || dy > 1) {
-    //   throw new Error(
-    //     `Invalid move from (${this.coordinate.x}, ${this.coordinate.y}) to (${newCoordinate.x}, ${newCoordinate.y}). Coordinates must be adjacent.`
-    //   );
-    // }
+    const dx = Math.abs(newCoordinate.x - this.coordinate.x);
+    const dy = Math.abs(newCoordinate.y - this.coordinate.y);
+    if (dx > 1 || dy > 1) {
+      throw new Error(
+        `Invalid move from (${this.coordinate.x}, ${this.coordinate.y}) to (${newCoordinate.x}, ${newCoordinate.y}). Coordinates must be adjacent.`
+      );
+    }
 
     this.coordinate = newCoordinate;
     this.history.push(newCoordinate); // Add new coordinate to history
@@ -62,7 +70,7 @@ export class Player {
     return [...this.history]; // Return a copy of the history
   }
 
-  public updateState(player: Player): Player {
+  public updateState(player: PlayerFieldInterface): Player {
     this.dead = player.dead;
     this.wins = player.wins;
 

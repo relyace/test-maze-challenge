@@ -1,5 +1,5 @@
 import { Discover } from "../data/models/Discover";
-import { Player } from "../data/models/Player";
+import { Player, PlayerFieldInterface } from "../data/models/Player";
 import { Coordinate } from "../data/models/Reference";
 import {
   mapDiscoverResourceToDiscover,
@@ -37,7 +37,7 @@ export class MazeServices {
   }
 
   public static async surroundsDiscover(
-    discoverUrl: string
+    discoverUrl: string,
   ): Promise<Discover> {
     // ensure discoverUrl is a relative URL
     const pat = /^https?:\/\//i;
@@ -65,7 +65,7 @@ export class MazeServices {
   public static async movePlayer(
     moveUrl: string,
     location: Coordinate
-  ): Promise<Player> {
+  ): Promise< PlayerFieldInterface & {moveUrl: string, discoverUrl: string} > {
     // ensure moveUrl is a relative URL
     const pat = /^https?:\/\//i;
     const isAbsoluteUrl = pat.test(moveUrl);
@@ -89,15 +89,17 @@ export class MazeServices {
     const resource = await res.json();
 
     if (
-      resource.position_x !== location.x &&
+      resource.position_x !== location.x ||
       resource.position_y !== location.y
     ) {
-      console.error(`Move error: ${res.statusText} - ${resource.message} - ${resource.dead}`);
-      throw new Error(
-        `Player moved to unexpected position: expected (${location.x}, ${location.y}), got (${resource.position_x}, ${resource.position_y})`
-      );
+      console.log('Player did not move : ', resource.message)
+      console.log('Player stay on : ', new Coordinate(resource.position_x, resource.position_y));
     }
 
-    return mapPlayerResourceToPlayer(resource);
+    return {
+      ...mapPlayerResourceToPlayer(resource),
+      moveUrl: resource.url_move as string,
+      discoverUrl: resource.url_discover as string,
+    };
   }
 }

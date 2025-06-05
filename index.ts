@@ -1,4 +1,5 @@
 import { tryExitMaze } from "./src/exitMaze";
+import { drawMazePath } from "./src/services/draw";
 import { MazeServices } from "./src/services/mazeServices";
 
 // starting the game will create a player
@@ -11,8 +12,7 @@ console.log("Player created:", player.player);
 const path = await tryExitMaze(
   player.player,
   player.url_discover,
-  player.url_move,
-  false
+  player.url_move
 );
 
-console.log("Player's path trying to exit the maze:", path);
+path && drawMazePath(path);
